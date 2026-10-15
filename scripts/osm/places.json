@@ -1,0 +1,191 @@
+{
+  "version": 0.6,
+  "generator": "Overpass API 0.7.62.11 87bfad18",
+  "osm3s": {
+    "timestamp_osm_base": "2026-10-15T13:46:27Z",
+    "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL."
+  },
+  "elements": [
+
+{
+  "type": "node",
+  "id": 27329885,
+  "lat": 53.5304274,
+  "lon": -2.2960186,
+  "tags": {
+    "name": "Prestwich",
+    "name:en": "Prestwich",
+    "name:ur": "پریسٹوِچ",
+    "place": "town",
+    "wikidata": "Q1003559",
+    "wikipedia": "en:Prestwich"
+  }
+},
+{
+  "type": "node",
+  "id": 30028078,
+  "lat": 53.5665707,
+  "lon": -2.2240010,
+  "tags": {
+    "created_by": "JOSM",
+    "is_in": "Rochdale, Greater Manchester, England, UK",
+    "name": "Birch",
+    "place": "hamlet",
+    "source": "npe"
+  }
+},
+{
+  "type": "node",
+  "id": 30028079,
+  "lat": 53.5620343,
+  "lon": -2.2724723,
+  "tags": {
+    "name": "Unsworth",
+    "name:ur": "اُنز ورتھ",
+    "place": "suburb",
+    "source": "npe"
+  }
+},
+{
+  "type": "node",
+  "id": 30028080,
+  "lat": 53.5309522,
+  "lon": -2.2306831,
+  "tags": {
+    "name": "Higher Blackley",
+    "place": "suburb",
+    "source": "npe"
+  }
+},
+{
+  "type": "node",
+  "id": 30687180,
+  "lat": 53.5672299,
+  "lon": -2.2952715,
+  "tags": {
+    "created_by": "JOSM",
+    "is_in": "Bury, Greater Manchester, England, UK",
+    "name": "Blackford Bridge",
+    "name:ur": "بلیک فورڈ برج",
+    "place": "suburb",
+    "source": "npe"
+  }
+},
+{
+  "type": "node",
+  "id": 30844655,
+  "lat": 53.5692293,
+  "lon": -2.2863336,
+  "tags": {
+    "name": "Hollins",
+    "name:ur": "ہولنز",
+    "place": "village"
+  }
+},
+{
+  "type": "node",
+  "id": 30844665,
+  "lat": 53.5533682,
+  "lon": -2.2969019,
+  "tags": {
+    "is_in:district": "Bury",
+    "name": "Whitefield",
+    "name:ur": "وائٹفیلڈ",
+    "place": "town",
+    "source": "npe",
+    "wikidata": "Q1615791",
+    "wikipedia": "en:Whitefield, Greater Manchester"
+  }
+},
+{
+  "type": "node",
+  "id": 30877207,
+  "lat": 53.5527307,
+  "lon": -2.2371319,
+  "tags": {
+    "name": "Bowlee",
+    "old_name": "Bow Lee",
+    "place": "hamlet",
+    "source": "npe, wikipedia",
+    "wikidata": "Q9178232"
+  }
+},
+{
+  "type": "node",
+  "id": 30877209,
+  "lat": 53.5446859,
+  "lon": -2.2269259,
+  "tags": {
+    "name": "Rhodes",
+    "place": "suburb",
+    "source": "npe"
+  }
+},
+{
+  "type": "node",
+  "id": 30877210,
+  "lat": 53.5395069,
+  "lon": -2.2256190,
+  "tags": {
+    "name": "Boothroyden",
+    "place": "suburb",
+    "source": "npe"
+  }
+},
+{
+  "type": "node",
+  "id": 30877211,
+  "lat": 53.5484681,
+  "lon": -2.2566435,
+  "tags": {
+    "name": "Simister",
+    "name:ur": "سمسٹر",
+    "place": "village",
+    "source": "npe",
+    "wikidata": "Q7517890"
+  }
+},
+{
+  "type": "node",
+  "id": 1827358514,
+  "lat": 53.5325285,
+  "lon": -2.2715172,
+  "tags": {
+    "name": "Heaton Park",
+    "name:ur": "ہیٹن پارک",
+    "place": "suburb"
+  }
+},
+{
+  "type": "node",
+  "id": 1827358515,
+  "lat": 53.5409256,
+  "lon": -2.2789674,
+  "tags": {
+    "name": "Kirkhams",
+    "place": "suburb"
+  }
+},
+{
+  "type": "node",
+  "id": 9891662211,
+  "lat": 53.5450175,
+  "lon": -2.2843495,
+  "tags": {
+    "name": "Besses o' th' Barn",
+    "place": "suburb"
+  }
+},
+{
+  "type": "node",
+  "id": 13159908045,
+  "lat": 53.5577510,
+  "lon": -2.2143979,
+  "tags": {
+    "name": "Langley",
+    "place": "suburb"
+  }
+}
+
+  ]
+}

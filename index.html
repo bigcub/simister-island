@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Simister Island: M60 J18, today and in 2029</title>
+    <meta name="description" content="A map of Simister Island, where the M60, M62 and M66 meet north of Manchester: every way through, the roundabout's lanes colour-coded by exit, a live traffic simulation, and the Northern Loop works that open in 2029." />
+    <meta name="theme-color" content="#f5f1e8" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#1a2428" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" />
+    <link rel="stylesheet" href="styles.css" />
+    <script>
+      (() => {
+        let saved = null;
+        try { saved = localStorage.getItem("theme"); } catch (e) {}
+        const preferred = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        document.documentElement.dataset.theme = saved === "dark" || saved === "light" ? saved : preferred;
+      })();
+    </script>
+  </head>
+  <body>
+    <main class="stage" id="stage">
+      <div class="map-card" id="mapwrap">
+        <svg id="map" role="img" aria-label="Map of Simister Island, the junction of the M60, M62 and M66, with its roundabout and slip roads"></svg>
+        <canvas id="cars" aria-hidden="true"></canvas>
+        <div class="tip" id="tip" hidden></div>
+      </div>
+
+      <header class="float-title">
+        <svg class="mark" viewBox="0 0 40 40" aria-hidden="true">
+          <circle class="mark-bg" cx="20" cy="20" r="19" />
+          <path class="mark-q w" d="M8.5 20A11.5 11.5 0 0 1 20 8.5" /><path class="mark-q n" d="M20 8.5A11.5 11.5 0 0 1 31.5 20" />
+          <path class="mark-q e" d="M31.5 20A11.5 11.5 0 0 1 20 31.5" /><path class="mark-q s" d="M20 31.5A11.5 11.5 0 0 1 8.5 20" />
+        </svg>
+        <span class="title-copy">
+          <h1>Simister Island</h1>
+          <small>M60 J18 · M62 J18 · M66 J4</small>
+        </span>
+      </header>
+
+      <div class="float-tools">
+        <button class="round-button" id="zin" type="button" aria-label="Zoom in" title="Zoom in"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 5v10M5 10h10" /></svg></button>
+        <button class="round-button" id="zout" type="button" aria-label="Zoom out" title="Zoom out"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 10h10" /></svg></button>
+        <button class="round-button" id="zfit" type="button" aria-label="Show the whole junction" title="Show the whole junction"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="5.5" /><path d="M10 1.8v2.4M10 15.8v2.4M1.8 10h2.4M15.8 10h2.4" /></svg></button>
+        <button class="round-button theme-toggle" id="theme" type="button" aria-label="Switch colour theme" title="Switch colour theme">
+          <svg class="sun" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="3.6" /><path d="M10 1.8v2.1M10 16.1v2.1M1.8 10h2.1M16.1 10h2.1M4.2 4.2l1.5 1.5M14.3 14.3l1.5 1.5M4.2 15.8l1.5-1.5M14.3 5.7l1.5-1.5" /></svg>
+          <svg class="moon" viewBox="0 0 20 20" aria-hidden="true"><path d="M15.8 12.6A6.6 6.6 0 0 1 7.4 4.2a6.6 6.6 0 1 0 8.4 8.4Z" /></svg>
+        </button>
+      </div>
+
+      <div class="float-foot" id="foot">
+        <div class="sim-bar">
+          <button class="pill" id="play" type="button" aria-pressed="true"><svg viewBox="0 0 20 20" aria-hidden="true"><path class="play" d="M7 5.2v9.6L15 10Z" /><path class="stop" d="M6.5 5.5h2.6v9H6.5ZM10.9 5.5h2.6v9h-2.6Z" /></svg><span id="play-label">Pause traffic</span></button>
+          <div class="segmented compact" role="group" aria-label="How busy">
+            <button type="button" data-level="0.45" aria-pressed="false">Quiet</button>
+            <button type="button" data-level="1" aria-pressed="true">Busy</button>
+            <button type="button" data-level="1.7" aria-pressed="false">Rush hour</button>
+          </div>
+          <button class="pill toggle" id="lanes" type="button" aria-pressed="true"><span class="swatches" aria-hidden="true"><i class="w"></i><i class="n"></i><i class="e"></i><i class="s"></i></span>Lane colours</button>
+        </div>
+
+        <div class="timeline" id="timeline">
+          <div class="tl-head">
+            <span class="tl-when" id="tl-when">October 2026</span>
+            <span class="tl-what" id="tl-what">Works under way</span>
+            <span class="tl-jump">
+              <button type="button" data-jump="before">Before</button>
+              <button type="button" data-jump="now">Now</button>
+              <button type="button" data-jump="after">2029</button>
+            </span>
+          </div>
+          <div class="tl-track">
+            <div class="tl-ticks" id="tl-ticks" aria-hidden="true"></div>
+            <input type="range" id="tl" min="2025.5" max="2029.5" step="0.01" value="2026.79" aria-label="Date on the works timeline" />
+          </div>
+        </div>
+      </div>
+
+      <div class="float-scale" aria-hidden="true">
+        <svg class="north" viewBox="0 0 14 22"><path d="M7 1 10.5 14 7 11.6 3.5 14Z" /><text x="7" y="21.5">N</text></svg>
+        <span class="scale"><span class="bar" id="scale-bar"></span><span id="scale-label">200 m</span></span>
+        <span class="credit">© OpenStreetMap</span>
+      </div>
+
+      <button class="pill show-panel" id="show-panel" type="button" hidden><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M12 5 7 10l5 5" /></svg>Details</button>
+
+      <aside class="panel" id="panel" aria-label="Simister Island">
+        <div class="panel-top">
+          <div class="segmented" role="tablist" aria-label="Sections">
+            <button type="button" role="tab" id="t-routes" aria-selected="true" aria-controls="pane-routes">Ways through</button>
+            <button type="button" role="tab" id="t-works" aria-selected="false" aria-controls="pane-works">The works</button>
+            <button type="button" role="tab" id="t-about" aria-selected="false" aria-controls="pane-about">About</button>
+          </div>
+          <button class="round-button small" id="hide-panel" type="button" aria-label="Hide the panel" title="Hide the panel"><svg viewBox="0 0 20 20" aria-hidden="true"><path class="side" d="m8 5 5 5-5 5" /><path class="sheet" d="m5 8 5 5 5-5" /></svg></button>
+        </div>
+
+        <div class="panes">
+          <section class="pane" id="pane-routes" role="tabpanel" aria-labelledby="t-routes">
+            <div class="clock" id="clock">
+              <p class="eyebrow">M60 Whitefield (J17) to Middleton (J19)</p>
+              <div class="clock-row">
+                <div><span class="clock-k">Today's layout</span><span class="clock-v" id="clock-before">–</span></div>
+                <div><span class="clock-k">With the loop</span><span class="clock-v" id="clock-after">–</span></div>
+              </div>
+              <p class="clock-note" id="clock-note">Average time across the junction in the simulation. Drag the timeline to 2029 to time the loop.</p>
+            </div>
+            <div id="moves"></div>
+          </section>
+
+          <section class="pane" id="pane-works" role="tabpanel" aria-labelledby="t-works" hidden>
+            <p class="lede">Simister Island carries more traffic than it was built for. The scheme adds a loop so M60 traffic no longer has to go round the roundabout, and widens the roads around it. Work started in 2026 and is planned to finish in 2029.</p>
+            <dl class="figures" id="figures"></dl>
+            <h2 class="about-h">What's being built</h2>
+            <ul class="scheme" id="scheme"></ul>
+            <h2 class="about-h">Timeline</h2>
+            <ol class="events" id="events"></ol>
+            <p class="credits">Scheme details from <a href="https://nationalhighways.co.uk/roads-and-travel/road-projects/north-west/m60-junction-18-simister-island-interchange/">National Highways</a> and the scheme's <a href="https://national-infrastructure-consenting.planninginspectorate.gov.uk/projects/TR010064">Development Consent Order documents</a>. Dates marked planned are from the construction programme in the Environmental Statement and may move. The loop on the map is traced from the scheme drawings and is approximate.</p>
+          </section>
+
+          <section class="pane about" id="pane-about" role="tabpanel" aria-labelledby="t-about" hidden>
+            <h2 class="about-h first">One junction, three numbers</h2>
+            <div class="prose">
+              <p>Simister Island is where the M60, M62 and M66 meet, just north of Heaton Park. It is junction 18 of the M60 and of the M62, and junction 4 of the M66. National Highways counts about 90,000 vehicles a day through it.</p>
+              <p>Its quirk is that the motorways do not run straight through in the way the names suggest. Coming round the M60 clockwise, the main carriageway carries on as the M62 to Leeds. To stay on the M60 you leave by the slip, go halfway round the roundabout and rejoin. Going the other way, the M60 from Middleton runs straight on into the M66.</p>
+              <p>Every movement that uses the roundabout is a right turn. Straight on and left turns all have their own roads. So each car on the roundabout rides two quarters of it: the first in the inner lanes, the second in the outer lanes, ready for its exit. The lane colours on the map follow that spiral, coloured by where each lane leads.</p>
+            </div>
+            <h2 class="about-h">The simulation</h2>
+            <div class="prose">
+              <p>The cars follow the real lanes and slip roads from OpenStreetMap. The roundabout's signals run a simple two-stage plan: entries on opposite sides go together while the circulating traffic in front of them is held. Traffic levels and the split between destinations are made up to look plausible; they are not counts.</p>
+            </div>
+            <p class="keys">Drag the map to move it, and scroll or pinch to zoom. Click a car or a route to follow its way through. <kbd>Space</kbd> pauses the traffic.</p>
+            <p class="credits">Map data © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>. A companion to <a href="https://m60motorway.com">m60motorway.com</a>.</p>
+          </section>
+        </div>
+      </aside>
+    </main>
+
+    <script src="data/geo.js"></script>
+    <script src="data/content.js"></script>
+    <script src="map.js"></script>
+    <script src="sim.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
