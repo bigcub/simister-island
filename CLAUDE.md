@@ -41,6 +41,12 @@ is used.
 Before handing off a visual change, check light and dark, a phone width and a desktop
 width, the console, and reduced motion (the traffic starts paused).
 
+## Analytics
+
+Google Analytics (GA4, `G-QRBPTTMSWD`) is in the `<head>` of `index.html`. It loads
+only when the page is served from simisterisland.com, so local previews never reach
+the reports.
+
 ## Working locally
 
 ```sh

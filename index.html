@@ -3,6 +3,19 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <!-- Google tag (gtag.js). Loads only on the live domain, so local previews stay out of the reports. -->
+    <script>
+      if (location.hostname === "simisterisland.com" || location.hostname === "www.simisterisland.com") {
+        const ga = document.createElement("script");
+        ga.async = true;
+        ga.src = "https://www.googletagmanager.com/gtag/js?id=G-QRBPTTMSWD";
+        document.head.appendChild(ga);
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function () { dataLayer.push(arguments); };
+        gtag("js", new Date());
+        gtag("config", "G-QRBPTTMSWD");
+      }
+    </script>
     <title>Simister Island: M60 J18, today and in 2029</title>
     <meta name="description" content="A map of Simister Island, where the M60, M62 and M66 meet north of Manchester: every way through, the roundabout's lanes colour-coded by exit, a live traffic simulation, and the Northern Loop works that open in 2029." />
     <meta name="theme-color" content="#f5f1e8" media="(prefers-color-scheme: light)" />
