@@ -18,8 +18,7 @@
     </script>
     <title>Simister Island: M60 J18, today and in 2029</title>
     <meta name="description" content="A map of Simister Island, where the M60, M62 and M66 meet north of Manchester: every way through, the roundabout's lanes colour-coded by exit, a live traffic simulation, and the Northern Loop works that open in 2029." />
-    <meta name="theme-color" content="#f5f1e8" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#1a2428" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#1a2428" />
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -29,8 +28,8 @@
       (() => {
         let saved = null;
         try { saved = localStorage.getItem("theme"); } catch (e) {}
-        const preferred = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-        document.documentElement.dataset.theme = saved === "dark" || saved === "light" ? saved : preferred;
+        // dark unless the visitor has picked light with the theme button
+        document.documentElement.dataset.theme = saved === "light" ? "light" : "dark";
       })();
     </script>
   </head>
