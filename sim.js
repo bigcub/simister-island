@@ -89,10 +89,38 @@
         if (seen.has(st2.group)) continue;
         seen.add(st2.group);
         const i = Math.max(0, Math.min(R.n - 1, Math.round(st2.s / R.step)));
-        const off = (R.L[i] / 2) * LANE + 1.6;
-        signalHeads.push({ group: st2.group, x: R.x[i] + R.hy[i] * off, y: R.y[i] - R.hx[i] * off });
+        signalHeads.push({ group: st2.group, mx: R.x[i], my: R.y[i], nx: R.hy[i], ny: -R.hx[i], off: (R.L[i] / 2) * LANE });
       }
     }
+    migrate();
+  }
+
+  // After the timeline moves, put every car on the current layout's version of its
+  // route. M60 J17 to J19 swaps between the roundabout and the loop: cars that have not
+  // yet reached the point where the two part carry on the new way; the rest are taken off.
+  function migrate() {
+    const loop = state.loopOpen;
+    const keep = [];
+    for (const c of cars) {
+      let key = c.R.key;
+      if (key === 'w-s' && loop) key = 'w-s-2029';
+      if (key === 'w-s-2029' && !loop) key = 'w-s';
+      const R = active[key];
+      if (R === c.R) { keep.push(c); continue; }
+      const i0 = Math.round(c.s / R.step);
+      let best = -1, bd = 2.5;
+      for (let i = Math.max(0, i0 - 4); i <= Math.min(R.n - 1, i0 + 4); i++) {
+        const d = Math.hypot(R.x[i] - c.mx, R.y[i] - c.my);
+        if (d < bd) { bd = d; best = i; }
+      }
+      if (best < 0) { if (followCar === c) followCar = null; continue; }
+      c.R = R;
+      c.s = best * R.step;
+      keep.push(c);
+    }
+    cars = keep;
+    // queued cars were waiting for the old routes
+    for (const k in pending) pending[k].length = 0;
   }
 
   function activeRoutes() {
@@ -117,7 +145,7 @@
     for (const c of cars) {
       if (Math.abs(c.x - x) < 16 && Math.abs(c.y - y) < 16 && Math.hypot(c.x - x, c.y - y) < 15) return false;
     }
-    cars.push({ id: nextId++, R, s: 0, v: Math.min(R.vlim[0], speedCap) * 0.85, dl, lat: off, x, y, hx: R.hx[0], hy: R.hy[0],
+    cars.push({ id: nextId++, R, s: 0, v: Math.min(R.vlim[0], speedCap) * 0.85, dl, lat: off, x, y, mx: R.x[0], my: R.y[0], hx: R.hx[0], hy: R.hy[0],
       dest: R.key.split('-')[1], born: simT, braking: false });
     return true;
   }
@@ -219,6 +247,7 @@
       const hl = Math.hypot(hx, hy) || 1;
       c.hx = hx / hl; c.hy = hy / hl;
       const cx = R.x[j] + (R.x[j + 1] - R.x[j]) * f, cy = R.y[j] + (R.y[j + 1] - R.y[j]) * f;
+      c.mx = cx; c.my = cy;
       c.x = cx + c.hy * c.lat; c.y = cy - c.hx * c.lat;
     }
     if (done.length) {
@@ -250,63 +279,70 @@
     const cs = getComputedStyle(document.documentElement);
     for (const k of ['w', 's', 'n', 'e']) colours[k] = cs.getPropertyValue('--to-' + k).trim();
     colours.ink = cs.getPropertyValue('--mw-case').trim();
-    colours.card = cs.getPropertyValue('--card').trim();
+    colours.edge = cs.getPropertyValue('--car-edge').trim();
     colours.gold = cs.getPropertyValue('--gold').trim();
   }
 
-  function draw(ctx, view, W, H, dpr) {
+  // Where a car is drawn: on its lane, with sideways distances scaled by E (see map.js).
+  let drawE = 1;
+  const shownX = (c) => c.mx + c.hy * c.lat * drawE;
+  const shownY = (c) => c.my - c.hx * c.lat * drawE;
+
+  function draw(ctx, view, W, H, dpr, E) {
+    drawE = E;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, W * dpr, H * dpr);
     const s = view.s * dpr;
     const ox = (W / 2) * dpr - view.cx * s, oy = (H / 2) * dpr - view.cy * s;
-    ctx.setTransform(s, 0, 0, s, ox, oy);
     const k = 1 / view.s; // metres per css pixel
-    const minLen = 5.5 * k, minWid = 2.6 * k;
-    const len = Math.max(CAR_L, minLen), wid = Math.max(CAR_W, minWid);
-    const x0 = view.cx - (W / 2) * k - 10, x1 = view.cx + (W / 2) * k + 10;
-    const y0 = view.cy - (H / 2) * k - 10, y1 = view.cy + (H / 2) * k + 10;
+    const wid = Math.max(CAR_W, 0.66 * LANE * E), len = Math.max(CAR_L, wid * 2.2);
+    const x0 = view.cx - (W / 2) * k - 20, x1 = view.cx + (W / 2) * k + 20;
+    const y0 = view.cy - (H / 2) * k - 20, y1 = view.cy + (H / 2) * k + 20;
 
     for (const c of cars) {
-      if (c.x < x0 || c.x > x1 || c.y < y0 || c.y > y1) continue;
+      const x = shownX(c), y = shownY(c);
+      if (x < x0 || x > x1 || y < y0 || y > y1) continue;
       const dim = selected && c.R.key !== selected;
-      ctx.globalAlpha = dim ? 0.28 : 1;
-      ctx.setTransform(s * c.hx, s * c.hy, -s * c.hy, s * c.hx, ox + c.x * s, oy + c.y * s);
-      ctx.fillStyle = colours[c.dest];
+      ctx.globalAlpha = dim ? 0.25 : 1;
+      ctx.setTransform(s * c.hx, s * c.hy, -s * c.hy, s * c.hx, ox + x * s, oy + y * s);
       ctx.beginPath();
-      ctx.roundRect(-len / 2, -wid / 2, len, wid, Math.min(wid / 2, 0.7 * Math.max(1, k)));
-      ctx.fill();
-      ctx.lineWidth = Math.max(0.25, 0.7 * k);
-      ctx.strokeStyle = colours.ink;
+      ctx.roundRect(-len / 2, -wid / 2, len, wid, wid * 0.3);
+      ctx.lineWidth = Math.max(0.3, 1.3 * k);
+      ctx.strokeStyle = colours.edge;
       ctx.stroke();
-      if (c.braking && view.s > 1.2) {
-        ctx.fillStyle = '#ff4a3a';
-        ctx.fillRect(-len / 2 - 0.1, -wid / 2 + 0.15, 0.45, wid - 0.3);
+      ctx.fillStyle = colours[c.dest];
+      ctx.fill();
+      if (c.braking) {
+        ctx.fillStyle = '#ff3b2f';
+        ctx.fillRect(-len / 2, -wid / 2 + wid * 0.12, len * 0.12, wid * 0.76);
       }
       if (c === followCar) {
-        ctx.lineWidth = 2.2 * k;
+        ctx.lineWidth = 2.4 * k;
         ctx.strokeStyle = colours.gold;
         ctx.beginPath();
-        ctx.arc(0, 0, Math.max(len, 9 * k), 0, Math.PI * 2);
+        ctx.arc(0, 0, Math.max(len, 10 * k), 0, Math.PI * 2);
         ctx.stroke();
       }
     }
     ctx.globalAlpha = 1;
     ctx.setTransform(s, 0, 0, s, ox, oy);
-    // signal heads
-    const r = Math.max(1.3, 3.4 * k);
+    // signal heads, just off the nearside edge of the stop line
+    const r = Math.max(1.4, 4 * k);
     for (const h of signalHeads) {
+      const off = h.off * E + r * 1.8;
+      const x = h.mx + h.nx * off, y = h.my + h.ny * off;
       const sig = signal(h.group, simT);
       ctx.fillStyle = colours.ink;
-      ctx.beginPath(); ctx.arc(h.x, h.y, r * 1.45, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(x, y, r * 1.5, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = sig === 'green' ? '#3fbf6a' : sig === 'amber' ? '#f2b33d' : '#e8453c';
-      ctx.beginPath(); ctx.arc(h.x, h.y, r, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
     }
   }
 
   function pick(x, y, k) {
     let best = null, bd = Math.max(8, 14 * k);
     for (const c of cars) {
-      const d = Math.hypot(c.x - x, c.y - y);
+      const d = Math.hypot(shownX(c) - x, shownY(c) - y);
       if (d < bd) { bd = d; best = c; }
     }
     return best;
@@ -324,6 +360,7 @@
     following: () => followCar,
     route: (key) => active[key],
     count: () => cars.length,
+    cars: () => cars,
     reset: () => { cars = []; for (const k in pending) pending[k].length = 0; },
   };
 })();

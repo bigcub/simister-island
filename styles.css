@@ -24,10 +24,10 @@
   --minor-case: #ddd5c6;
   --major: #f6e9cf;
   --major-case: #d9c7a5;
-  --asphalt: #8f8a86;
-  --asphalt-top: #a8a29c;
-  --mw-case: #6e6560;
-  --lane-line: #f7f3ea;
+  --asphalt: #a3abad;
+  --mw-case: #56605f;
+  --lane-line: #ffffff;
+  --car-edge: #ffffff;
   --label: #8b8f84;
 
   --route: #a4606b;
@@ -72,10 +72,10 @@
   --minor-case: #2c3a40;
   --major: #3b4646;
   --major-case: #3b4646;
-  --asphalt: #3f4a50;
-  --asphalt-top: #48545a;
-  --mw-case: #11191c;
-  --lane-line: #c9cfc8;
+  --asphalt: #46535a;
+  --mw-case: #0f171a;
+  --lane-line: #d5dbd4;
+  --car-edge: #0e1518;
   --label: #8a9893;
 
   --route: #cf95a1;
@@ -324,9 +324,9 @@ a { color: inherit; }
 .mw .case { stroke: var(--mw-case); stroke-linecap: butt; }
 .mw .top { stroke: var(--asphalt); stroke-linecap: butt; }
 .mw .bridge.case { stroke: var(--ink); }
-.mw .lane { stroke: var(--lane-line); stroke-width: max(0.18px, calc(var(--k) * 0.9px)); stroke-dasharray: 3 6; opacity: 0.85; }
+.mw .lane { stroke: var(--lane-line); stroke-width: max(0.2px, calc(var(--k) * 1px)); stroke-dasharray: 3 6; opacity: 0.9; }
 .mw .shoulder { stroke: var(--lane-line); stroke-width: max(0.2px, calc(var(--k) * 1.1px)); opacity: 0.9; }
-.zoomed-out .mw .lane, .zoomed-out .mw .shoulder { display: none; }
+.zoomed-out .mw .lane, .zoomed-out .mw .shoulder { opacity: 0.5; }
 .mw .closed.top { stroke: color-mix(in srgb, var(--asphalt) 45%, var(--land)); }
 .mw .closed.case { stroke: color-mix(in srgb, var(--mw-case) 35%, var(--land)); }
 .closed-x { fill: none; stroke: var(--closed); stroke-width: calc(var(--k) * 2.4px); stroke-linecap: round; }
@@ -339,10 +339,10 @@ a { color: inherit; }
 #hatch path { stroke: var(--works); stroke-width: 1.4; }
 
 /* lane colours: where each lane leads */
-.ribbons path { fill: none; stroke-linecap: round; stroke-linejoin: round; opacity: 0.88; mix-blend-mode: normal; }
+.ribbons path { fill: none; stroke-linecap: butt; stroke-linejoin: round; opacity: 0.62; }
 .ribbons .to-w { stroke: var(--to-w); } .ribbons .to-s { stroke: var(--to-s); }
 .ribbons .to-n { stroke: var(--to-n); } .ribbons .to-e { stroke: var(--to-e); }
-.ribbons.dim path { opacity: 0.18; }
+.ribbons.dim path { opacity: 0.15; }
 .ribbons.dim path.on { opacity: 1; }
 .chevrons path { fill: none; stroke: var(--lane-line); stroke-linecap: round; stroke-linejoin: round; stroke-width: calc(var(--k) * 1.4px); opacity: 0.9; }
 

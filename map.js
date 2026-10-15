@@ -83,6 +83,13 @@
   // Lane coordinate q (0 = nearside lane) to a lateral offset, positive to the left.
   const laneOffset = (L, q) => ((L - 1) / 2 - q) * LANE;
 
+  // When zoomed out, real lane widths shrink below a few pixels. Everything sideways
+  // (road widths, lane lines, lane colours, cars) is then drawn wider by E, so each
+  // lane keeps at least MIN_LANE_PX on screen. Lengths along the road stay true.
+  const MIN_LANE_PX = 5.5;
+  let E = 1;
+  const exaggeration = (pxPerMetre) => Math.min(3, Math.max(1, MIN_LANE_PX / (LANE * pxPerMetre)));
+
   const el = (tag, attrs, parent) => {
     const e = document.createElementNS(NS, tag);
     for (const k in attrs) e.setAttribute(k, attrs[k]);
@@ -156,7 +163,7 @@
       const lvl = items.filter((i) => i.z === z);
       for (const pass of ['case', 'top', 'lane']) {
         for (const it of lvl) {
-          const w = it.lanes * LANE + (it.shoulder ? 3.3 : 0) + 0.8;
+          const w = (it.lanes * LANE + (it.shoulder ? 3.3 : 0)) * E + 0.8;
           const d = pathD(it.pts);
           if (pass === 'case') {
             el('path', { class: 'case' + (it.bridge ? ' bridge' : '') + (it.closed ? ' closed' : ''), d, style: `stroke-width:calc(${w.toFixed(1)}px + var(--k) * ${it.bridge ? 3.2 : 2}px)` }, g);
@@ -165,9 +172,9 @@
           } else if (!it.closed) {
             const W = w - 0.8, start = -W / 2;
             const lines = [];
-            for (let k = 1; k < it.lanes; k++) lines.push(pathD(offset(it.pts, start + k * LANE)));
+            for (let k = 1; k < it.lanes; k++) lines.push(pathD(offset(it.pts, start + k * LANE * E)));
             if (lines.length) el('path', { class: 'lane', d: lines.join('') }, g);
-            if (it.shoulder) el('path', { class: 'shoulder', d: pathD(offset(it.pts, start + it.lanes * LANE)) }, g);
+            if (it.shoulder) el('path', { class: 'shoulder', d: pathD(offset(it.pts, start + it.lanes * LANE * E)) }, g);
           }
         }
       }
@@ -195,7 +202,7 @@
     if (st.loopOpen) return;
     el('path', { class: 'loop-site', d: pathD(loopPts), 'stroke-width': 30 }, g);
     if (st.loopProgress > 0) {
-      loopBuilt = el('path', { class: 'loop-built', d: pathD(loopPts), 'stroke-width': 2 * LANE + 0.8 }, g);
+      loopBuilt = el('path', { class: 'loop-built', d: pathD(loopPts), 'stroke-width': 2 * LANE * E + 0.8 }, g);
       loopLen = loopBuilt.getTotalLength();
       setLoopProgress(st.loopProgress);
     }
@@ -262,7 +269,7 @@
     const out = [];
     for (let i = i0; i <= i1; i += 2) {
       const L = R.L[i], q = R.u[i] * (L - 1);
-      const off = laneOffset(L, q) + stripe * 0.24 * LANE;
+      const off = (laneOffset(L, q) + stripe * 0.24 * LANE) * E;
       out.push([R.x[i] + R.hy[i] * off, R.y[i] - R.hx[i] * off]);
     }
     return out;
@@ -278,7 +285,7 @@
       while (b > a && Math.hypot(R.x[b], R.y[b]) > RIBBON_R) b--;
       if (b - a < 4) continue;
       const stripe = STRIPE[R.key] || 0;
-      const w = stripe ? LANE * 0.42 : LANE * 0.7;
+      const w = (stripe ? LANE * 0.4 : LANE * 0.62) * E;
       el('path', { class: 'to-' + dest, 'data-route': R.key, d: pathD(lanePath(R, a, b, stripe)), 'stroke-width': w }, g);
     }
   }
@@ -300,5 +307,5 @@
     featureEls.closed.style.display = st.loopOpen ? '' : 'none';
   }
 
-  window.MAP = { G, LANE, pairs, offset, resample, laneOffset, init, drawMotorways, drawWorks, setLoopProgress, drawRibbons, highlight, placeShields, setLabels, layers: () => layers };
+  window.MAP = { G, LANE, exaggeration, setE: (e) => { E = e; }, getE: () => E, pairs, offset, resample, laneOffset, init, drawMotorways, drawWorks, setLoopProgress, drawRibbons, highlight, placeShields, setLabels, layers: () => layers };
 })();

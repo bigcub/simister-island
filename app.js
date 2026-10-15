@@ -31,6 +31,7 @@
       MAP.drawMotorways(st);
       MAP.drawWorks(st);
       SIM.setState(st);
+      if (selectedKey) SIM.select(liveKey(selectedKey));
       redrawRibbons();
     }
     MAP.setLoopProgress(st.loopProgress);
@@ -85,7 +86,7 @@
   const view = { cx: 0, cy: 0, s: 1 };
   let W = 0, H = 0, dpr = 1;
   let userMoved = false; // once the user pans or zooms, a resize keeps their view
-  const FIT = [-720, -640, 720, 600]; // x0, y0, x1, y1 in metres
+  const FIT = [-520, -580, 460, 400]; // x0, y0, x1, y1 in metres: the roundabout, its slips and the loop
 
   function insets() {
     // the panel sits at the side on wide screens and along the bottom on phones
@@ -134,6 +135,8 @@
     svg.style.setProperty('--k', k);
     svg.classList.toggle('zoomed-out', view.s < 0.75);
     MAP.placeShields(k);
+    const e = MAP.exaggeration(view.s);
+    if (Math.abs(Math.log(e / MAP.getE())) > 0.05) { MAP.setE(e); relayout = true; }
     // a round number of metres for the scale bar
     const steps = [10, 20, 50, 100, 200, 500, 1000, 2000];
     const m = steps.find((x) => x * view.s >= 70) || 2000;
@@ -376,7 +379,7 @@
   }
 
   // ---------- the frame loop ----------
-  let needsDraw = true, last = performance.now();
+  let needsDraw = true, relayout = false, last = performance.now();
   function frame(now) {
     const dt = Math.min(0.1, (now - last) / 1000);
     last = now;
@@ -392,8 +395,15 @@
       view.cy += (f.y - view.cy) * 0.12;
       apply();
     }
+    if (relayout && st) {
+      // lanes drawn wider or narrower after a zoom
+      relayout = false;
+      MAP.drawMotorways(st);
+      MAP.drawWorks(st);
+      redrawRibbons();
+    }
     if (needsDraw) {
-      SIM.draw(ctx, view, W, H, dpr);
+      SIM.draw(ctx, view, W, H, dpr, MAP.getE());
       needsDraw = false;
     }
     renderClock(now);
