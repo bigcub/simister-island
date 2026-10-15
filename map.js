@@ -219,15 +219,20 @@
   // metres, scaled by metres-per-pixel on every view change.
   const ARMS_AT = { w: 'w-e', s: 's-n', n: 'n-s', e: 'e-w' };
   let shieldEls = [], featureEls = {};
+  // A point on the approach (the first half of the route) at a given distance from the
+  // roundabout, with its lane count and the nearside normal: for an inbound carriageway
+  // the nearside is the outer edge of the motorway, so labels there stay off the road.
   function pointAt(key, dist) {
-    // on the approach: the first half of the route
-    const all = pairs(G.routes[key].p), p = all.slice(0, Math.ceil(all.length / 2));
-    let best = p[0], bd = Infinity;
-    for (const q of p) {
-      const d = Math.abs(Math.hypot(q[0], q[1]) - dist);
-      if (d < bd) { bd = d; best = q; }
+    const r = G.routes[key], all = pairs(r.p), half = Math.ceil(all.length / 2);
+    let bi = 0, bd = Infinity;
+    for (let i = 0; i < half; i++) {
+      const d = Math.abs(Math.hypot(all[i][0], all[i][1]) - dist);
+      if (d < bd) { bd = d; bi = i; }
     }
-    return best;
+    const a = all[Math.max(0, bi - 1)], b = all[Math.min(all.length - 1, bi + 1)];
+    const l = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
+    const hx = (b[0] - a[0]) / l, hy = (b[1] - a[1]) / l;
+    return { x: all[bi][0], y: all[bi][1], nx: hy, ny: -hx, lanes: r.l[bi] };
   }
   function drawLabels() {
     const g = layers.labels;
@@ -247,17 +252,25 @@
     featureEls.closed.textContent = 'Slip closed';
     const arms = window.ARMS;
     for (const [arm, key] of Object.entries(ARMS_AT)) {
-      const [x, y] = pointAt(key, 520);
-      const sg = el('g', { class: 'shield mw', 'data-x': x, 'data-y': y }, layers.shields);
-      el('rect', { x: -19, y: -10, width: 38, height: 20, rx: 4 }, sg);
-      el('text', { x: 0, y: 0.5 }, sg).textContent = arms[arm].road;
-      const t = el('text', { class: 'dest-l', x: 0, y: 26, 'text-anchor': 'middle' }, sg);
+      const at = pointAt(key, 520);
+      const sg = el('g', { class: 'shield mw' }, layers.shields);
+      el('rect', { x: -19, y: -21, width: 38, height: 20, rx: 4 }, sg);
+      el('text', { x: 0, y: -10.5 }, sg).textContent = arms[arm].road;
+      const t = el('text', { class: 'dest-l', x: 0, y: 15, 'text-anchor': 'middle' }, sg);
       t.textContent = arms[arm].label;
-      shieldEls.push(sg);
+      shieldEls.push({ sg, at });
     }
   }
+  // Beside the road: past its drawn edge (which grows with E), then far enough out in
+  // screen pixels that the shield and its destination clear it.
   function placeShields(k) {
-    for (const sg of shieldEls) sg.setAttribute('transform', `translate(${sg.dataset.x},${sg.dataset.y}) scale(${k})`);
+    for (const { sg, at } of shieldEls) {
+      const box = sg.getBBox();
+      const reach = 10 + Math.abs(at.nx) * box.width / 2 + Math.abs(at.ny) * box.height / 2;
+      const d = (at.lanes * LANE * E) / 2 + reach * k;
+      const cx = box.x + box.width / 2, cy = box.y + box.height / 2;
+      sg.setAttribute('transform', `translate(${at.x + at.nx * d},${at.y + at.ny * d}) scale(${k}) translate(${-cx},${-cy})`);
+    }
   }
 
   // ---------- lane colours and the chosen route ----------

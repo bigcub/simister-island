@@ -134,9 +134,9 @@
     svg.setAttribute('viewBox', `${view.cx - (W / 2) * k} ${view.cy - (H / 2) * k} ${W * k} ${H * k}`);
     svg.style.setProperty('--k', k);
     svg.classList.toggle('zoomed-out', view.s < 0.75);
-    MAP.placeShields(k);
     const e = MAP.exaggeration(view.s);
     if (Math.abs(Math.log(e / MAP.getE())) > 0.05) { MAP.setE(e); relayout = true; }
+    MAP.placeShields(k);
     // a round number of metres for the scale bar
     const steps = [10, 20, 50, 100, 200, 500, 1000, 2000];
     const m = steps.find((x) => x * view.s >= 70) || 2000;
